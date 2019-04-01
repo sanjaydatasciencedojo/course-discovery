@@ -108,7 +108,7 @@ class TestProgramViewSet(SerializationMixin):
         with django_assert_num_queries(FuzzyInt(61, 2)):
             response = self.assert_retrieve_success(program)
         # property does not have the right values while being indexed
-        del program._course_run_weeks_to_complete
+        # del program._course_run_weeks_to_complete
         assert response.data == self.serialize_program(program)
 
         # Verify that requests including querystring parameters are cached separately.
@@ -126,7 +126,7 @@ class TestProgramViewSet(SerializationMixin):
         with django_assert_num_queries(FuzzyInt(46, 2)):
             response = self.assert_retrieve_success(program)
         # property does not have the right values while being indexed
-        del program._course_run_weeks_to_complete
+        # del program._course_run_weeks_to_complete
         assert response.data == self.serialize_program(program)
 
     def test_retrieve_curriculum_with_child_programs(self, django_assert_num_queries):
@@ -153,7 +153,7 @@ class TestProgramViewSet(SerializationMixin):
         with django_assert_num_queries(FuzzyInt(64, 2)):
             response = self.assert_retrieve_success(parent_program)
         # property does not have the right values while being indexed
-        del parent_program._course_run_weeks_to_complete
+        # del parent_program._course_run_weeks_to_complete
         assert response.data == self.serialize_program(parent_program)
 
     @pytest.mark.parametrize('order_courses_by_start_date', (True, False,))
@@ -167,7 +167,7 @@ class TestProgramViewSet(SerializationMixin):
             order_courses_by_start_date=order_courses_by_start_date,
             partner=self.partner)
         # property does not have the right values while being indexed
-        del program._course_run_weeks_to_complete
+        # del program._course_run_weeks_to_complete
         with django_assert_num_queries(FuzzyInt(45, 2)):
             response = self.assert_retrieve_success(program)
         assert response.data == self.serialize_program(program)
