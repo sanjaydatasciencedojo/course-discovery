@@ -474,6 +474,28 @@ class CourseRunViewSetTests(SerializationMixin, ElasticsearchTestMixin, OAuth2Mi
         draft_course_run = CourseRun.everything.get(key=self.draft_course_run.key, draft=True)
         assert draft_course_run.status == CourseRunStatus.LegalReview
 
+    @responses.activate
+    def test_draft_false_republish(self):
+        """ Verify that setting draft to False moves status to LegalReview. """
+        self.mock_patch_to_studio(self.draft_course_run.key)
+        self.draft_course_run.status = CourseRunStatus.Published  # BJH: Need to ensure official world here?
+        self.draft_course_run.save()
+        url = reverse('api:v1:course_run-detail', kwargs={'key': self.draft_course_run.key})
+        expected_min_effort = 867
+        expected_max_effort = 5309
+        data = {
+            'max_effort': expected_max_effort,
+            'min_effort': expected_min_effort,
+            'draft': False,
+        }
+        response = self.client.patch(url, data, format='json')
+        assert response.status_code == 200, "Status {}: {}".format(response.status_code, response.content)
+        self.draft_course_run.refresh_from_db()
+        assert self.draft_course_run.status == CourseRunStatus.Published
+        assert self.draft_course_run.max_effort == expected_max_effort  # BJH: Check the official object too
+        assert self.draft_course_run.min_effort == expected_min_effort
+
+
     def test_list(self):
         """ Verify the endpoint returns a list of all course runs. """
         url = reverse('api:v1:course_run-list')
