@@ -217,13 +217,17 @@ class CourseRunViewSet(viewsets.ModelViewSet):
         if course_run.status == CourseRunStatus.Reviewed:
             request.data['status'] = CourseRunStatus.Unpublished
 
-        # Sending draft=False triggers the review process
+        # Sending draft=False triggers the review process for unpublished courses
         draft = request.data.pop('draft', True)  # Don't let draft parameter trickle down
         if not draft and course_run.status != CourseRunStatus.Published:
             request.data['status'] = CourseRunStatus.LegalReview
 
         response = super().update(request, *args, **kwargs)
         self.push_to_studio(request, course_run, create=False)
+
+        # Published courses can be re-published directly
+        if not draft and course_run.status == CourseRunStatus.Published:
+            pass  # course_run.set_official_state()  # BJH: call copy-everything re-publish method
 
         return response
 
