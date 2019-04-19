@@ -289,7 +289,7 @@ class CourseRunViewSetTests(SerializationMixin, ElasticsearchTestMixin, OAuth2Mi
         with mock.patch('course_discovery.apps.api.v1.views.course_runs.log.info') as mock_logger:
             response = self.client.patch(url, {}, format='json')
 
-        self.assertEqual(response.status_code, 200)
+        assert response.status_code == 200, "Status {}: {}".format(response.status_code, response.content)
         mock_logger.assert_called_with(
             'Not pushing course run info for %s to Studio as partner %s has no studio_url set.',
             self.draft_course_run.key,
@@ -475,8 +475,8 @@ class CourseRunViewSetTests(SerializationMixin, ElasticsearchTestMixin, OAuth2Mi
         assert draft_course_run.status == CourseRunStatus.LegalReview
 
     @responses.activate
-    def test_edit_published(self):
-        """ Verify that draft rows can be updated but are NOT immediately re-published. """
+    def test_patch_published(self):
+        """ Verify that draft rows can be updated and re-published with draft=False. """
         self.mock_patch_to_studio(self.draft_course_run.key)
         self.draft_course_run.min_effort = 0
         self.draft_course_run.max_effort = 1

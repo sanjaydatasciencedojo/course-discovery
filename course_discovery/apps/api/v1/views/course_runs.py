@@ -21,7 +21,7 @@ from course_discovery.apps.api.v1.exceptions import EditableAndQUnsupported
 from course_discovery.apps.course_metadata.choices import CourseRunStatus
 from course_discovery.apps.course_metadata.constants import COURSE_RUN_ID_REGEX
 from course_discovery.apps.course_metadata.models import Course, CourseEditor, CourseRun
-from course_discovery.apps.course_metadata.utils import ensure_draft_world
+from course_discovery.apps.course_metadata.utils import ensure_draft_world, set_official_state
 
 
 log = logging.getLogger(__name__)
@@ -227,7 +227,7 @@ class CourseRunViewSet(viewsets.ModelViewSet):
 
         # Published courses can be re-published directly
         if not draft and course_run.status == CourseRunStatus.Published:
-            pass  # course_run.set_official_state()  # BJH: call copy-everything re-publish method
+            set_official_state(course_run, CourseRun)
 
         return response
 
