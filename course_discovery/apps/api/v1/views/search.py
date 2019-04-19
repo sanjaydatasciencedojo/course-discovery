@@ -167,6 +167,53 @@ class PersonSearchViewSet(BaseHaystackViewSet):
     lookup_field = 'uuid'
 
 
+class PersonTypeaheadSearchView(APIView):
+    """ Typeahead for people. """
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, *args, **kwargs):
+        """
+        Typeahead uses the ngram_analyzer as the index_analyzer to generate ngrams of the title during indexing.
+        i.e. Data Science -> da, dat, at, ata, data, etc...
+        Typeahead uses the lowercase analyzer as the search_analyzer.
+        The ngram_analyzer uses the lowercase filter as well, which makes typeahead case insensitive.
+        Available analyzers are defined in index _settings and field level analyzers are defined in the index _mapping.
+        NGrams are used rather than EdgeNgrams because NGrams allow partial searches across white space:
+        i.e. data sci - > data science, but not data analysis or scientific method
+        ---
+        parameters:
+            - name: q
+              description: "Search text"
+              paramType: query
+              required: true
+              type: string
+            - name: orgs
+              description: "Organization short codes"
+              paramType: query
+              required: false
+              type: List of string
+        """
+        query = request.query_params.get('q')
+        if not query:
+            raise ValidationError("The 'q' querystring parameter is required for searching.")
+        words = query.split()
+        org_keys = self.request.GET.getlist('org', None)
+
+        queryset = Person.objects.all()
+
+        if org_keys:
+            # We are pulling the people who are part of course runs belonging to the given organizations.
+            # This blank order_by is there to offset the default ordering on people since
+            # we don't care about the order in which they are returned.
+            queryset = queryset.filter(courses_staffed__course__authoring_organizations__key__in=org_keys).order_by()
+
+        for word in words:
+            # Progressively filter the same queryset - every word must match something
+            queryset = queryset.filter(Q(given_name__icontains=word) | Q(family_name__icontains=word))
+
+        return serializers.PersonSerializer(queryset)
+
+
 class TypeaheadSearchView(APIView):
     """ Typeahead for courses and programs. """
     RESULT_COUNT = 3
